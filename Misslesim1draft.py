@@ -4369,15 +4369,13 @@ def main():
     print("="*60)
 
 
-def run_saturation_demo(show_3d: bool = False):
+def run_saturation_demo():
     """
     Run a saturation attack demonstration.
 
     Simulates 6 incoming cruise missiles against a SAM battery with 8 interceptors.
     Uses 85% Pk (probability of kill) per intercept attempt.
-
-    Args:
-        show_3d: If True, show 3D visualization instead of 2D animation
+    Shows 3D animated visualization.
     """
     print("\n" + "="*70)
     print("       SATURATION ATTACK DEMONSTRATION (3D)")
@@ -4436,15 +4434,10 @@ def run_saturation_demo(show_3d: bool = False):
             print(f"  Result: CITY HIT! {state.targets_leaked} missile(s) got through")
             print(f"  Defense Effectiveness: {effectiveness:.0f}%")
 
-    # Visualize the engagement
-    if show_3d:
-        print("\n>>> Starting 3D animation...")
-        print("Close the window to exit.")
-        animate_saturation_attack_3d(sim, interval=30, rotate_view=True)
-    else:
-        print("\n>>> Starting 2D animation...")
-        print("Close the window to exit.")
-        animate_saturation_attack(sim, interval=30)
+    # Visualize the engagement in 3D
+    print("\n>>> Starting 3D animation...")
+    print("Close the window to exit.")
+    animate_saturation_attack_3d(sim, interval=30, rotate_view=False)
 
     print("\n" + "="*70)
     print("SATURATION ATTACK DEMO COMPLETE")

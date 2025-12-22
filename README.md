@@ -35,23 +35,11 @@ A realistic 3D missile defense simulation featuring SAM (Surface-to-Air Missile)
 
 ## Usage
 
-### 3D Animated Visualization (Recommended)
-```bash
-python run.py --3d
-```
-Features a rotating camera view showing missiles and interceptors in 3D space.
-
-### 2D Animation
 ```bash
 python run.py
 ```
-Classic top-down view of the engagement.
 
-### Single Target Demo
-```bash
-python run.py --single
-```
-One-on-one intercept demonstration.
+This launches the 3D animated visualization showing missiles and interceptors in 3D space.
 
 ## How It Works
 
