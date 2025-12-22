@@ -4022,10 +4022,10 @@ def animate_saturation_attack_3d(sim: SaturationSimulation, interval: int = 50,
                 if len(target_path) > 0:
                     evt_frame = min(int(evt_time / frame_dt), len(target_path) - 1)
                     pos = target_path[evt_frame]
-                    # Add explosion marker
+                    # Add explosion marker (larger for zoomed view)
                     explosion = ax.scatter([pos[0]], [pos[1]], [pos[2]],
-                                          color='orange', s=300, marker='*',
-                                          edgecolors='yellow', linewidths=2, alpha=0.9)
+                                          color='orange', s=500, marker='*',
+                                          edgecolors='yellow', linewidths=3, alpha=0.95)
                     hit_markers.append((explosion, frame))
 
         # Fade out old hit markers
