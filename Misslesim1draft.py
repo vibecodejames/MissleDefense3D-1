@@ -1788,10 +1788,10 @@ class SaturationSimulation:
             # City at "top" of Earth sphere (0, 0, earth_radius)
             city_position = np.array([0.0, 0.0, earth_radius])
         if battery_position is None:
-            # SAM site 50km from city in -X direction (between city and incoming threats)
-            sam_angle = 50_000 / earth_radius
+            # SAM site 10km from city (close defense)
+            sam_angle = 10_000 / earth_radius
             battery_position = np.array([
-                -earth_radius * np.sin(sam_angle),  # Negative X (toward threats)
+                -earth_radius * np.sin(sam_angle),  # Negative X
                 0.0,
                 earth_radius * np.cos(sam_angle)
             ])
@@ -3823,12 +3823,14 @@ def animate_saturation_attack_3d(sim: SaturationSimulation, interval: int = 50,
     all_local_positions.append(battery_local)
     all_local_positions = np.array(all_local_positions)
 
-    # Zoom in closer - focus on the intercept zone
+    # Expand view to show full SAM range dome (100km)
+    sam_range = 100_000  # Match the dome size
     max_range = max(
         abs(all_local_positions[:, 0]).max(),
         abs(all_local_positions[:, 1]).max(),
-        all_local_positions[:, 2].max()  # Z is altitude, always positive
-    ) * 0.5  # Reduced from 1.1 to zoom in
+        all_local_positions[:, 2].max(),
+        sam_range * 1.1  # Ensure dome is visible
+    )
 
     # Color schemes
     target_colors = ['#ff4444', '#ff6644', '#ff8844', '#ffaa44', '#ffcc44', '#ffee44']
@@ -4391,29 +4393,13 @@ def run_saturation_demo():
     print("       6 Cruise Missiles vs 8 SAM Interceptors")
     print("="*70)
 
-    EARTH_RADIUS = 6_371_000  # meters
-
-    # City position (3D: Earth-centered coordinates)
-    city_pos = np.array([0.0, 0.0, EARTH_RADIUS])
-
-    # SAM battery position (50km from city, 3D)
-    sam_angle = 50_000 / EARTH_RADIUS
-    battery_pos = np.array([
-        -EARTH_RADIUS * np.sin(sam_angle),
-        0.0,
-        EARTH_RADIUS * np.cos(sam_angle)
-    ])
-
-    # Create and run saturation simulation
+    # Create and run saturation simulation (uses default positions)
     sim = SaturationSimulation(
         num_targets=6,            # 6 incoming cruise missiles
         num_interceptors=8,       # 8 SAM interceptors
         pk_single=0.85,           # 85% probability of kill
-        reload_time=5.0,          # 5 seconds between launches
+        reload_time=3.0,          # 3 seconds between launches (faster)
         max_simultaneous=6,       # Up to 6 SAMs in flight at once
-        city_position=city_pos,
-        battery_position=battery_pos,
-        earth_radius=EARTH_RADIUS,
         dt=0.05,                  # 50ms time steps (finer resolution)
         max_time=300.0,           # 5 minute max
         intercept_range=2000.0    # 2km kill radius (large fragmentation warhead)
@@ -4446,7 +4432,7 @@ def run_saturation_demo():
     # Visualize the engagement in 3D
     print("\n>>> Starting 3D animation...")
     print("Close the window to exit.")
-    animate_saturation_attack_3d(sim, interval=30, rotate_view=False)
+    animate_saturation_attack_3d(sim, interval=15, rotate_view=True)  # Fast with rotation
 
     print("\n" + "="*70)
     print("SATURATION ATTACK DEMO COMPLETE")
