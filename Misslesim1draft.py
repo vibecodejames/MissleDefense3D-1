@@ -1831,57 +1831,53 @@ class SaturationSimulation:
 
     def _generate_attack_wave(self):
         """
-        Generate incoming cruise missiles for the attack wave (3D).
+        Generate incoming missiles for the attack wave (3D).
 
         Creates targets with:
-        - Staggered starting positions (30-second spread)
-        - Varying altitudes (10-18 km)
-        - Lateral spread in Y direction
-        - All heading toward the city
+        - Coming from above at high altitude
+        - Multiple approach directions (spread around the compass)
+        - Diving trajectories toward the city
         """
-        # Base distance from city (120km)
-        base_distance = 120_000
-        cruise_speed = 1000.0  # Mach 3
+        # Missiles start high and far
+        base_distance = 80_000  # 80km horizontal distance
+        base_altitude = 25_000  # 25km altitude (edge of space)
+        cruise_speed = 1200.0  # Fast ballistic-style approach
 
         for i in range(self.num_targets):
-            # Stagger arrival: spread over 30 seconds worth of distance
-            distance_offset = (i / max(1, self.num_targets - 1)) * 30_000  # 0-30km spread
-            missile_distance = base_distance + distance_offset
+            # Spread missiles around different compass directions
+            # Divide 360 degrees among missiles with some randomness
+            base_angle = (i / self.num_targets) * 2 * np.pi
+            approach_angle = base_angle + random.uniform(-0.3, 0.3)  # radians
 
-            # Vary altitude: 10-18 km
-            altitude = 10_000 + (i % 4) * 2_000 + random.uniform(-500, 500)
+            # Vary distance and altitude slightly
+            distance = base_distance + random.uniform(-15_000, 15_000)
+            altitude = base_altitude + random.uniform(-5_000, 5_000)
 
-            # Lateral spread in Y direction (±10km for variety)
-            lateral_offset_y = random.uniform(-10_000, 10_000)
-
-            # Calculate 3D position
-            # City is at (0, 0, earth_radius), missiles approach from -X direction
-            missile_angle = missile_distance / self.earth_radius
-            missile_radius = self.earth_radius + altitude
-
-            # Position in 3D: coming from negative X, with Y spread
-            missile_x = -missile_radius * np.sin(missile_angle)
-            missile_y = lateral_offset_y
-            missile_z = missile_radius * np.cos(missile_angle)
+            # Calculate 3D position (coming from above, spread around city)
+            # City is at (0, 0, earth_radius)
+            # Missiles positioned in a ring above and around the city
+            missile_x = distance * np.cos(approach_angle)
+            missile_y = distance * np.sin(approach_angle)
+            missile_z = self.earth_radius + altitude  # High above Earth surface
 
             position = np.array([missile_x, missile_y, missile_z])
 
-            # Calculate velocity toward city (3D)
+            # Calculate velocity toward city (diving down)
             to_city = self.city_position - position
             to_city_unit = to_city / np.linalg.norm(to_city)
             velocity = cruise_speed * to_city_unit
 
-            # Create cruise missile aircraft
+            # Create missile aircraft
             aircraft = Aircraft(
                 name=f"CM-{i+1}",
                 position=position,
                 velocity=velocity,
                 max_speed=cruise_speed,
-                max_acceleration=15.0,
-                max_g=5.0,
+                max_acceleration=20.0,
+                max_g=8.0,
                 burn_time=300.0,
                 drag_coefficient=0.0,
-                is_missile=False  # Maintains altitude
+                is_missile=True  # Ballistic trajectory
             )
 
             # Create target track
@@ -3867,6 +3863,19 @@ def animate_saturation_attack_3d(sim: SaturationSimulation, interval: int = 50,
     ax.scatter([battery_local[0]], [battery_local[1]], [battery_local[2]],
                color='lime', s=350, marker='s', edgecolors='white', linewidths=2,
                label='SAM Battery', zorder=10)
+
+    # SAM range dome (wireframe hemisphere)
+    sam_range = 100_000  # 100km engagement range
+    # Create hemisphere mesh
+    u = np.linspace(0, 2 * np.pi, 24)
+    v = np.linspace(0, np.pi / 2, 12)  # Only upper hemisphere
+    dome_x = battery_local[0] + sam_range * np.outer(np.cos(u), np.sin(v))
+    dome_y = battery_local[1] + sam_range * np.outer(np.sin(u), np.sin(v))
+    dome_z = battery_local[2] + sam_range * np.outer(np.ones(np.size(u)), np.cos(v))
+    # Clip Z to be above ground
+    dome_z = np.maximum(dome_z, 0)
+    ax.plot_wireframe(dome_x, dome_y, dome_z, color='cyan', alpha=0.15,
+                      linewidth=0.5, label='SAM Range (100km)')
 
     # Ground plane
     ground_size = max_range * 1.2
